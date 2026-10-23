@@ -31,8 +31,15 @@
       <section class="card steps-card">
         <h2>Passos de Hoje</h2>
         <div class="steps-count" id="steps-display">0</div>
-        <p class="steps-goal">Meta: 6.000 passos</p>
+        
+        <!-- Barra de Progresso -->
+        <div class="progress-container" style="background:#334155; border-radius:10px; height:12px; margin:12px 0; overflow:hidden;">
+          <div id="progress-bar" style="background:#10b981; width:0%; height:100%; transition:width 0.3s;"></div>
+        </div>
+        <p class="steps-goal" id="pct-text">Meta: 6.000 passos</p>
+
         <button id="sensor-btn" class="btn-primary">Ativar Acelerómetro</button>
+        <button id="save-btn" class="btn-primary" style="background:#3b82f6; margin-top:8px;">Guardar Progresso 💾</button>
       </section>
     </main>
   </div>
