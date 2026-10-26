@@ -1,121 +1,95 @@
-// SUBSTITUA A URL ABAIXO PELA SUA URL DO GOOGLE APPS SCRIPT IMPLANTADO!
-const API_URL = "SUA_WEB_APP_URL_DO_GOOGLE_APPS_SCRIPT_AQUI"; 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bússola PRO - Método Groppo</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- HEADER / HUD DE JOGO -->
+        <header class="hud-header">
+            <div class="user-info">
+                <span id="user-name">Aventureiro</span>
+                <span id="user-plan" class="badge-free">FREE</span>
+            </div>
+            <div class="prana-container">
+                <span class="prana-icon">✨</span>
+                <span id="prana-counter">0</span> <small>Prana</small>
+            </div>
+        </header>
 
-let tg = window.Telegram ? window.Telegram.WebApp : null;
-let currentTelegramId = "12345678"; // Id fallback para testes em browser
+        <!-- SEÇÃO: CRIADOR DE PERSONAGEM (ONBOARDING FREE) -->
+        <section id="character-creator" class="card">
+            <h2>🎮 Criador de Personagem</h2>
+            <form id="onboarding-form">
+                <label>Nome do Aventureiro:</label>
+                <input type="text" id="input-nome" placeholder="Seu nome ou apelido" required>
 
-if (tg) {
-    tg.expand();
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        currentTelegramId = tg.initDataUnsafe.user.id.toString();
-    }
-}
+                <label>Gênero Biológico:</label>
+                <select id="input-genero">
+                    <option value="MASCULINO">Masculino</option>
+                    <option value="FEMININO">Feminino</option>
+                </select>
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Atualizar visualizador do slider de silhueta
-    const silhuetaInput = document.getElementById("input-silhueta");
-    if(silhuetaInput) {
-        silhuetaInput.addEventListener("input", (e) => {
-            document.getElementById("silhueta-val").innerText = e.target.value;
-        });
-    }
+                <div class="row">
+                    <div>
+                        <label>Altura (cm):</label>
+                        <input type="number" id="input-altura" placeholder="175" required>
+                    </div>
+                    <div>
+                        <label>Peso (kg):</label>
+                        <input type="number" id="input-peso" placeholder="70" required>
+                    </div>
+                </div>
 
-    // Listener do Formulário de Onboarding
-    const onboardingForm = document.getElementById("onboarding-form");
-    if(onboardingForm) {
-        onboardingForm.addEventListener("submit", handleOnboarding);
-    }
+                <label>Silhueta Atual (1 a 10):</label>
+                <input type="range" id="input-silhueta" min="1" max="10" value="5">
+                <div class="silhueta-preview">Nível de Silhueta: <strong id="silhueta-val">5</strong></div>
 
-    // Carregar dados iniciais
-    loadUserData();
-});
+                <button type="submit" class="btn-primary">Criar Personagem & Iniciar Jornada</button>
+            </form>
+        </section>
 
-function loadUserData() {
-    fetch(`${API_URL}?action=getUser&telegram_id=${currentTelegramId}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === "success") {
-                renderGameDashboard(data);
-            } else {
-                // Usuário novo: Mostrar Criador de Personagem
-                document.getElementById("character-creator").classList.remove("hidden");
-                document.getElementById("game-dashboard").classList.add("hidden");
-            }
-        })
-        .catch(err => console.error("Erro ao carregar dados:", err));
-}
+        <!-- SEÇÃO: PAINEL PRINCIPAL DE PASSOS E ESTAÇÕES -->
+        <section id="game-dashboard" class="card hidden">
+            <div class="step-tracker">
+                <h3>👣 Passos de Hoje</h3>
+                <div class="step-count" id="steps-display">0 / 6000</div>
+                <div class="progress-bar">
+                    <div id="steps-progress" class="progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
 
-function handleOnboarding(e) {
-    e.preventDefault();
-    
-    const payload = {
-        action: "register",
-        telegram_id: currentTelegramId,
-        nome: document.getElementById("input-nome").value,
-        genero: document.getElementById("input-genero").value,
-        altura: document.getElementById("input-altura").value,
-        peso: document.getElementById("input-peso").value,
-        silhueta: document.getElementById("input-silhueta").value,
-        status_assinatura: "Free",
-        prana: 0,
-        passos_hoje: 0
-    };
+            <!-- PORTAIS DAS ESTAÇÕES (UNLOCK POR PASSOS) -->
+            <div class="portals-container">
+                <div id="portal-inverno" class="portal-card locked">
+                    <h4>❄️ Portal do Inverno</h4>
+                    <p>Alongamento & Descompressão</p>
+                    <small>Requer: 1.500 passos</small>
+                    <button class="btn-action" disabled onclick="playMiniGame('inverno')">Entrar no Portal</button>
+                </div>
 
-    fetch(API_URL, {
-        method: "POST",
-        body: new URLSearchParams(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success") {
-            alert("Personagem Criado com Sucesso!");
-            loadUserData();
-        }
-    });
-}
+                <div id="portal-outono" class="portal-card locked">
+                    <h4>🍂 Portal do Outono</h4>
+                    <p>Core Leve & Postura</p>
+                    <small>Requer: 3.500 passos</small>
+                    <button class="btn-action" disabled onclick="playMiniGame('outono')">Entrar no Portal</button>
+                </div>
+            </div>
 
-function renderGameDashboard(user) {
-    document.getElementById("character-creator").classList.add("hidden");
-    document.getElementById("game-dashboard").classList.remove("hidden");
+            <!-- RITUAL NOTURNO / TAMAGOTCHI -->
+            <div id="night-ritual" class="card-ritual hidden">
+                🌙 <h3>Ritual Noturno Tamagotchi</h3>
+                <p>Seu avatar precisa restaurar as energias. Vamos fazer a coerência cardíaca diária.</p>
+                <blockquote id="daily-koan">"O caminhante não domina a montanha ao rápido subir, mas ao manter o passo constante."</blockquote>
+                <button class="btn-secondary" onclick="completeNightRitual()">Iniciar Coerência Cardíaca (3 min)</button>
+            </div>
+        </section>
+    </div>
 
-    document.getElementById("user-name").innerText = user.nome;
-    document.getElementById("user-plan").innerText = user.status_assinatura.toUpperCase();
-    document.getElementById("prana-counter").innerText = user.prana;
-
-    const steps = user.passos_hoje || 0;
-    document.getElementById("steps-display").innerText = `${steps} / 6000`;
-    
-    const progressPercent = Math.min((steps / 6000) * 100, 100);
-    document.getElementById("steps-progress").style.width = `${progressPercent}%`;
-
-    // Lógica de Desbloqueio dos Portais (Inverno = 1500 | Outono = 3500)
-    if (steps >= 1500) {
-        unlockPortal("portal-inverno");
-    }
-    if (steps >= 3500) {
-        unlockPortal("portal-outono");
-    }
-
-    // Ritual Noturno (libera a partir das 19h ou com meta batida)
-    const currentHour = new Date().getHours();
-    if (currentHour >= 19 || steps >= 6000) {
-        document.getElementById("night-ritual").classList.remove("hidden");
-    }
-}
-
-function unlockPortal(portalId) {
-    const el = document.getElementById(portalId);
-    if(el) {
-        el.classList.remove("locked");
-        const btn = el.querySelector("button");
-        if(btn) btn.disabled = false;
-    }
-}
-
-function playMiniGame(estacao) {
-    alert(`Iniciando Mini-Game de Movimento da Estação ${estacao.toUpperCase()}! Siga os movimentos na tela para ganhar Prana bônus.`);
-}
-
-function completeNightRitual() {
-    alert("Ritual Noturno concluído! +50 Pranas adicionados à sua conta. Bom descanso!");
-}
+    <script src="app.js"></script>
+</body>
+</html>
