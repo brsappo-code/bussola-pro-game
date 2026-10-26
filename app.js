@@ -1,8 +1,10 @@
-// URL oficial do Google Apps Script conectada ao banco de dados no Google Sheets
 const API_URL = "https://script.google.com/macros/s/AKfycbxPdOi7fIToShXjLJS60o3g2pBBTy5PEbhMXtld1EBU08NDkhY76su1L-aLyqYRjPmqLg/exec"; 
 
 let tg = window.Telegram ? window.Telegram.WebApp : null;
 let currentTelegramId = "7202627825"; // ID Fallback / Padrão de Testes
+
+// Objeto global para armazenar temporariamente os dados do usuário carregado
+let currentUserData = null;
 
 if (tg) {
     tg.expand();
@@ -12,10 +14,8 @@ if (tg) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. REGRA DE OURO: O MiniApp SEMPRE abre no Criador de Personagem para novos utilizadores
     mostrarCriadorDePersonagem();
 
-    // Listener do Slider de Silhueta Virtual
     const silhuetaInput = document.getElementById("input-silhueta");
     if(silhuetaInput) {
         silhuetaInput.addEventListener("input", (e) => {
@@ -24,7 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Listener do Seletor de Biótipo para Feedback Instantâneo
     const biotipoInput = document.getElementById("input-biotipo");
     if(biotipoInput) {
         biotipoInput.addEventListener("change", (e) => {
@@ -33,13 +32,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Listener do Formulário de Onboarding
     const onboardingForm = document.getElementById("onboarding-form");
     if(onboardingForm) {
         onboardingForm.addEventListener("submit", handleOnboarding);
     }
 
-    // 2. Verifica se o utilizador já tem cadastro prévio na planilha
     verificarCadastroExistente();
 });
 
@@ -72,14 +69,13 @@ function verificarCadastroExistente() {
     fetch(`${API_URL}?action=getUser&telegram_id=${currentTelegramId}`)
         .then(res => res.json())
         .then(data => {
-            // Se a planilha retornar um utilizador válido E com nome cadastrado, aí sim levamos para o Dashboard
             if (data.status === "success" && data.nome && data.nome.trim() !== "") {
+                currentUserData = data;
                 renderGameDashboard(data);
             }
-            // Se não, o utilizador continua livremente preenchendo o formulário que já está na tela.
         })
         .catch(err => {
-            console.log("Utilizador novo ou sem cadastro prévio. Permanece no criador de personagem.");
+            console.log("Utilizador novo ou aguardando cadastro.");
         });
 }
 
@@ -142,4 +138,50 @@ function renderGameDashboard(user) {
             portalOutono.classList.remove("locked");
         }
     }
+}
+
+// FUNÇÃO PARA EXPORTAR PERGAMINHO DE ATRIBUTOS (TXT LEVE)
+function exportarPergaminhoTXT() {
+    if (!currentUserData) {
+        alert("Nenhum dado de personagem encontrado para exportar.");
+        return;
+    }
+
+    const alturaM = parseFloat(currentUserData.altura) / 100;
+    const pesoKg = parseFloat(currentUserData.peso);
+    const imc = (alturaM > 0 && pesoKg > 0) ? (pesoKg / (alturaM * alturaM)).toFixed(1) : "N/A";
+
+    const conteudoPergaminho = `
+====================================================
+⚔️ PERGAMINHO DE ATRIBUTOS - BÚSSOLA PRO ⚔️
+====================================================
+Aventureiro(a) : ${currentUserData.nome || "Desconhecido"}
+ID Telegram    : ${currentUserData.telegram_id || currentTelegramId}
+Plano Atual    : ${(currentUserData.status_assinatura || "Free").toUpperCase()}
+Data de Registro: ${new Date().toLocaleDateString('pt-BR')}
+
+--- BIOMETRIA & FISIOLOGIA ---
+Gênero         : ${currentUserData.genero || "N/A"}
+Biotipo        : ${currentUserData.biotipo || "N/A"}
+Altura         : ${currentUserData.altura} cm
+Peso           : ${currentUserData.peso} kg
+IMC Calculado  : ${imc}
+Silhueta (1-9) : ${currentUserData.silhueta || "5"} / 9
+
+--- EVOLUÇÃO NO JOGO ---
+Prana Acumulado: ✨ ${currentUserData.prana || 0}
+Passos Registados: 👣 ${currentUserData.passos_hoje || 0} / 6000
+
+====================================================
+Método Groppo - Transformando saúde em uma jornada épica.
+====================================================
+    `.trim();
+
+    const blob = new Blob([conteudoPergaminho], { type: "text/plain;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Pergaminho_${(currentUserData.nome || "Aventureiro").replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
