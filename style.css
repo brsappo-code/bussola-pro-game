@@ -1,84 +1,160 @@
+/* RESET & TEMA RETRO RPG */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Courier New', Courier, monospace; /* Toque retro para combinar com pixel-art */
 }
 
 body {
-  background-color: var(--tg-theme-bg-color, #0f172a);
-  color: var(--tg-theme-text-color, #f8fafc);
-  padding: 16px;
-  display: flex;
-  justify-content: center;
+    background-color: #0b1329;
+    color: #e2e8f0;
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
 #app {
-  width: 100%;
-  max-width: 480px;
+    width: 100%;
+    max-width: 480px;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+/* HUD / HEADER DE JOGO */
+.hud-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e293b;
+    border: 2px solid #334155;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
 }
 
-.badge {
-  background: #3b82f6;
-  color: #fff;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: bold;
+.user-info {
+    display: flex;
+    flex-direction: column;
 }
 
-.card {
-  background: var(--tg-theme-secondary-bg-color, #1e293b);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+#user-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: #f8fafc;
 }
 
-.avatar-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.badge-free {
+    background: #3b82f6;
+    color: white;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-top: 2px;
+    text-transform: uppercase;
 }
 
-.avatar-container {
-  font-size: 3rem;
-  background: #334155;
-  width: 70px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+.prana-container {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fbbf24;
+    background: #0f172a;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #475569;
 }
 
-.steps-card {
-  text-align: center;
+/* JANELA / CARD ESTILO RPG */
+.rpg-window {
+    background: #172033;
+    border: 3px solid #475569;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    margin-bottom: 14px;
 }
 
-.steps-count {
-  font-size: 3.5rem;
-  font-weight: 800;
-  color: #10b981;
-  margin: 10px 0;
+.window-title {
+    background: #2563eb;
+    color: white;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+    border: 1px solid #60a5fa;
 }
 
-.btn-primary {
-  background: #10b981;
-  color: #fff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 12px;
+/* FORMULÁRIOS E CAMPOS */
+label {
+    font-size: 11px;
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+input, select {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    background: #0b1329;
+    border: 2px solid #334155;
+    border-radius: 4px;
+    color: #f8fafc;
+    font-size: 13px;
+}
+
+input:focus, select:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+
+.row-inputs {
+    display: flex;
+    gap: 10px;
+}
+
+/* BOTÃO ESTILO ARCADE */
+.btn-arcade {
+    background: linear-gradient(to bottom, #10b981, #059669);
+    color: white;
+    border: 2px solid #34d399;
+    padding: 12px;
+    width: 100%;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #047857;
+    transition: all 0.1s ease;
+}
+
+.btn-arcade:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #047857;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* PAINEL DE BIOMETRIA E METRICAS */
+.biometric-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 11px;
+}
+
+.biometric-box span {
+    color: #34d399;
+    font-weight: bold;
 }
