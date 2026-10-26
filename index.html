@@ -9,7 +9,7 @@
 </head>
 <body>
     <div id="app">
-        <!-- HEADER / HUD DE JOGO -->
+        <!-- HUD / HEADER DE JOGO -->
         <header class="hud-header">
             <div class="user-info">
                 <span id="user-name">Aventureiro</span>
@@ -21,71 +21,75 @@
             </div>
         </header>
 
-        <!-- SEÇÃO: CRIADOR DE PERSONAGEM (ONBOARDING FREE) -->
-        <section id="character-creator" class="card">
-            <h2>🎮 Criador de Personagem</h2>
+        <!-- CRIADOR DE PERSONAGEM & ANAMNESE -->
+        <section id="character-creator" class="rpg-window">
+            <div class="window-title">⚔️ CRIADOR DE PERSONAGEM ⚔️</div>
             <form id="onboarding-form">
                 <label>Nome do Aventureiro:</label>
                 <input type="text" id="input-nome" placeholder="Seu nome ou apelido" required>
 
-                <label>Gênero Biológico:</label>
-                <select id="input-genero">
-                    <option value="MASCULINO">Masculino</option>
-                    <option value="FEMININO">Feminino</option>
-                </select>
+                <div class="row-inputs">
+                    <div>
+                        <label>Gênero:</label>
+                        <select id="input-genero">
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMININO">Feminino</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Biotipo:</label>
+                        <select id="input-biotipo">
+                            <option value="Mesomorfo">Mesomorfo</option>
+                            <option value="Ectomorfo">Ectomorfo</option>
+                            <option value="Endomorfo">Endomorfo</option>
+                        </select>
+                    </div>
+                </div>
 
-                <div class="row">
+                <div class="row-inputs">
                     <div>
                         <label>Altura (cm):</label>
-                        <input type="number" id="input-altura" placeholder="175" required>
+                        <input type="number" id="input-altura" placeholder="175" required oninput="calcularBiometria()">
                     </div>
                     <div>
                         <label>Peso (kg):</label>
-                        <input type="number" id="input-peso" placeholder="70" required>
+                        <input type="number" id="input-peso" placeholder="70" required oninput="calcularBiometria()">
                     </div>
                 </div>
 
-                <label>Silhueta Atual (1 a 10):</label>
-                <input type="range" id="input-silhueta" min="1" max="10" value="5">
-                <div class="silhueta-preview">Nível de Silhueta: <strong id="silhueta-val">5</strong></div>
+                <div class="biometric-box" id="biometric-preview">
+                    📊 IMC: <span id="val-imc">--</span> | Biotipo: <span id="val-biotipo">Mesomorfo</span>
+                </div>
 
-                <button type="submit" class="btn-primary">Criar Personagem & Iniciar Jornada</button>
+                <label style="margin-top: 12px;">Silhueta Virtual (Atual: <strong id="silhueta-val">5</strong> / Meta: 10):</label>
+                <input type="range" id="input-silhueta" min="1" max="10" value="5">
+
+                <button type="submit" class="btn-arcade" style="margin-top: 14px;">Confirmar Atributos e Iniciar Jornada</button>
             </form>
         </section>
 
-        <!-- SEÇÃO: PAINEL PRINCIPAL DE PASSOS E ESTAÇÕES -->
-        <section id="game-dashboard" class="card hidden">
-            <div class="step-tracker">
+        <!-- PAINEL PRINCIPAL DE JOGO (DASHBOARD) -->
+        <section id="game-dashboard" class="rpg-window hidden">
+            <div class="window-title">🗺️ MAPA DE JORNADA - MÉTODO GROPPO</div>
+            
+            <div class="biometric-box" style="margin-bottom: 12px;">
                 <h3>👣 Passos de Hoje</h3>
-                <div class="step-count" id="steps-display">0 / 6000</div>
-                <div class="progress-bar">
-                    <div id="steps-progress" class="progress-fill" style="width: 0%;"></div>
+                <div class="step-count" id="steps-display" style="font-size: 18px; font-weight: bold; color: #34d399; margin: 4px 0;">0 / 6000</div>
+                <div class="progress-bar" style="background: #0b1329; border-radius: 4px; height: 10px; overflow: hidden; border: 1px solid #334155;">
+                    <div id="steps-progress" style="background: #10b981; height: 100%; width: 0%;"></div>
                 </div>
             </div>
 
-            <!-- PORTAIS DAS ESTAÇÕES (UNLOCK POR PASSOS) -->
+            <!-- PORTAIS DAS ESTAÇÕES -->
             <div class="portals-container">
-                <div id="portal-inverno" class="portal-card locked">
+                <div id="portal-inverno" class="biometric-box locked" style="opacity: 0.5; margin-bottom: 8px;">
                     <h4>❄️ Portal do Inverno</h4>
-                    <p>Alongamento & Descompressão</p>
-                    <small>Requer: 1.500 passos</small>
-                    <button class="btn-action" disabled onclick="playMiniGame('inverno')">Entrar no Portal</button>
+                    <p style="font-size: 10px; color: #94a3b8;">Alongamento & Descompressão (Requer 1.500 passos)</p>
                 </div>
-
-                <div id="portal-outono" class="portal-card locked">
+                <div id="portal-outono" class="biometric-box locked" style="opacity: 0.5;">
                     <h4>🍂 Portal do Outono</h4>
-                    <p>Core Leve & Postura</p>
-                    <small>Requer: 3.500 passos</small>
-                    <button class="btn-action" disabled onclick="playMiniGame('outono')">Entrar no Portal</button>
+                    <p style="font-size: 10px; color: #94a3b8;">Core Leve & Postura (Requer 3.500 passos)</p>
                 </div>
-            </div>
-
-            <!-- RITUAL NOTURNO / TAMAGOTCHI -->
-            <div id="night-ritual" class="card-ritual hidden">
-                🌙 <h3>Ritual Noturno Tamagotchi</h3>
-                <p>Seu avatar precisa restaurar as energias. Vamos fazer a coerência cardíaca diária.</p>
-                <blockquote id="daily-koan">"O caminhante não domina a montanha ao rápido subir, mas ao manter o passo constante."</blockquote>
-                <button class="btn-secondary" onclick="completeNightRitual()">Iniciar Coerência Cardíaca (3 min)</button>
             </div>
         </section>
     </div>
