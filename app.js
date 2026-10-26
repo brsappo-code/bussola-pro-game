@@ -12,6 +12,9 @@ if (tg) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // 1. REGRA DE OURO: O MiniApp SEMPRE abre no Criador de Personagem para novos utilizadores
+    mostrarCriadorDePersonagem();
+
     // Listener do Slider de Silhueta Virtual
     const silhuetaInput = document.getElementById("input-silhueta");
     if(silhuetaInput) {
@@ -36,11 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
         onboardingForm.addEventListener("submit", handleOnboarding);
     }
 
-    // Carregar dados iniciais do utilizador
-    loadUserData();
+    // 2. Verifica se o utilizador já tem cadastro prévio na planilha
+    verificarCadastroExistente();
 });
 
-// Função para Cálculo Dinâmico de IMC em Tempo Real
+function mostrarCriadorDePersonagem() {
+    const creator = document.getElementById("character-creator");
+    const dashboard = document.getElementById("game-dashboard");
+    if(creator) creator.classList.remove("hidden");
+    if(dashboard) dashboard.classList.add("hidden");
+}
+
 function calcularBiometria() {
     const alturaInput = document.getElementById("input-altura");
     const pesoInput = document.getElementById("input-peso");
@@ -59,19 +68,19 @@ function calcularBiometria() {
     }
 }
 
-function loadUserData() {
+function verificarCadastroExistente() {
     fetch(`${API_URL}?action=getUser&telegram_id=${currentTelegramId}`)
         .then(res => res.json())
         .then(data => {
-            if (data.status === "success") {
+            // Se a planilha retornar um utilizador válido E com nome cadastrado, aí sim levamos para o Dashboard
+            if (data.status === "success" && data.nome && data.nome.trim() !== "") {
                 renderGameDashboard(data);
-            } else {
-                // Se não for encontrado, mostra o Criador de Personagem
-                document.getElementById("character-creator").classList.remove("hidden");
-                document.getElementById("game-dashboard").classList.add("hidden");
             }
+            // Se não, o utilizador continua livremente preenchendo o formulário que já está na tela.
         })
-        .catch(err => console.error("Erro ao carregar dados do utilizador:", err));
+        .catch(err => {
+            console.log("Utilizador novo ou sem cadastro prévio. Permanece no criador de personagem.");
+        });
 }
 
 function handleOnboarding(e) {
@@ -99,7 +108,7 @@ function handleOnboarding(e) {
     .then(data => {
         if(data.status === "success") {
             alert("✨ Personagem Criado com Sucesso! Bem-vindo ao Bússola PRO!");
-            loadUserData();
+            verificarCadastroExistente();
         }
     })
     .catch(err => console.error("Erro ao registrar personagem:", err));
@@ -119,7 +128,6 @@ function renderGameDashboard(user) {
     const progressPercent = Math.min((steps / 6000) * 100, 100);
     document.getElementById("steps-progress").style.width = `${progressPercent}%`;
 
-    // Desbloqueio Dinâmico dos Portais
     if (steps >= 1500) {
         const portalInverno = document.getElementById("portal-inverno");
         if(portalInverno) {
