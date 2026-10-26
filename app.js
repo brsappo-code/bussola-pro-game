@@ -1,8 +1,8 @@
-// URL oficial do Google Apps Script conectada ao banco de dados
+// URL oficial do Google Apps Script conectada ao banco de dados no Google Sheets
 const API_URL = "https://script.google.com/macros/s/AKfycbxPdOi7fIToShXjLJS60o3g2pBBTy5PEbhMXtld1EBU08NDkhY76su1L-aLyqYRjPmqLg/exec"; 
 
 let tg = window.Telegram ? window.Telegram.WebApp : null;
-let currentTelegramId = "12345678"; // ID Fallback para testes diretos no browser
+let currentTelegramId = "7202627825"; // ID Fallback / Padrão de Testes
 
 if (tg) {
     tg.expand();
@@ -12,11 +12,21 @@ if (tg) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Atualizador visual do slider de silhueta
+    // Listener do Slider de Silhueta Virtual
     const silhuetaInput = document.getElementById("input-silhueta");
     if(silhuetaInput) {
         silhuetaInput.addEventListener("input", (e) => {
-            document.getElementById("silhueta-val").innerText = e.target.value;
+            const val = document.getElementById("silhueta-val");
+            if(val) val.innerText = e.target.value;
+        });
+    }
+
+    // Listener do Seletor de Biótipo para Feedback Instantâneo
+    const biotipoInput = document.getElementById("input-biotipo");
+    if(biotipoInput) {
+        biotipoInput.addEventListener("change", (e) => {
+            const valBio = document.getElementById("val-biotipo");
+            if(valBio) valBio.innerText = e.target.value;
         });
     }
 
@@ -30,6 +40,25 @@ document.addEventListener("DOMContentLoaded", () => {
     loadUserData();
 });
 
+// Função para Cálculo Dinâmico de IMC em Tempo Real
+function calcularBiometria() {
+    const alturaInput = document.getElementById("input-altura");
+    const pesoInput = document.getElementById("input-peso");
+    const valImc = document.getElementById("val-imc");
+
+    if (alturaInput && pesoInput && valImc) {
+        const altura = parseFloat(alturaInput.value) / 100;
+        const peso = parseFloat(pesoInput.value);
+        
+        if (altura > 0 && peso > 0) {
+            const imc = (peso / (altura * altura)).toFixed(1);
+            valImc.innerText = imc;
+        } else {
+            valImc.innerText = "--";
+        }
+    }
+}
+
 function loadUserData() {
     fetch(`${API_URL}?action=getUser&telegram_id=${currentTelegramId}`)
         .then(res => res.json())
@@ -37,12 +66,12 @@ function loadUserData() {
             if (data.status === "success") {
                 renderGameDashboard(data);
             } else {
-                // Se não encontrado, mostra o Criador de Personagem
+                // Se não for encontrado, mostra o Criador de Personagem
                 document.getElementById("character-creator").classList.remove("hidden");
                 document.getElementById("game-dashboard").classList.add("hidden");
             }
         })
-        .catch(err => console.error("Erro ao carregar dados:", err));
+        .catch(err => console.error("Erro ao carregar dados do utilizador:", err));
 }
 
 function handleOnboarding(e) {
@@ -53,6 +82,7 @@ function handleOnboarding(e) {
         telegram_id: currentTelegramId,
         nome: document.getElementById("input-nome").value,
         genero: document.getElementById("input-genero").value,
+        biotipo: document.getElementById("input-biotipo").value,
         altura: document.getElementById("input-altura").value,
         peso: document.getElementById("input-peso").value,
         silhueta: document.getElementById("input-silhueta").value,
@@ -68,20 +98,20 @@ function handleOnboarding(e) {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
-            alert("Personagem Criado com Sucesso!");
+            alert("✨ Personagem Criado com Sucesso! Bem-vindo ao Bússola PRO!");
             loadUserData();
         }
     })
-    .catch(err => console.error("Erro ao registrar:", err));
+    .catch(err => console.error("Erro ao registrar personagem:", err));
 }
 
 function renderGameDashboard(user) {
     document.getElementById("character-creator").classList.add("hidden");
     document.getElementById("game-dashboard").classList.remove("hidden");
 
-    document.getElementById("user-name").innerText = user.nome;
-    document.getElementById("user-plan").innerText = user.status_assinatura.toUpperCase();
-    document.getElementById("prana-counter").innerText = user.prana;
+    document.getElementById("user-name").innerText = user.nome || "Aventureiro";
+    document.getElementById("user-plan").innerText = (user.status_assinatura || "Free").toUpperCase();
+    document.getElementById("prana-counter").innerText = user.prana || 0;
 
     const steps = user.passos_hoje || 0;
     document.getElementById("steps-display").innerText = `${steps} / 6000`;
@@ -89,34 +119,19 @@ function renderGameDashboard(user) {
     const progressPercent = Math.min((steps / 6000) * 100, 100);
     document.getElementById("steps-progress").style.width = `${progressPercent}%`;
 
-    // Regra de Desbloqueio dos Portais (Inverno = 1500 | Outono = 3500)
+    // Desbloqueio Dinâmico dos Portais
     if (steps >= 1500) {
-        unlockPortal("portal-inverno");
+        const portalInverno = document.getElementById("portal-inverno");
+        if(portalInverno) {
+            portalInverno.style.opacity = "1";
+            portalInverno.classList.remove("locked");
+        }
     }
     if (steps >= 3500) {
-        unlockPortal("portal-outono");
+        const portalOutono = document.getElementById("portal-outono");
+        if(portalOutono) {
+            portalOutono.style.opacity = "1";
+            portalOutono.classList.remove("locked");
+        }
     }
-
-    // Ritual Noturno / Tamagotchi (Aparece a partir das 19h ou com 6000 passos)
-    const currentHour = new Date().getHours();
-    if (currentHour >= 19 || steps >= 6000) {
-        document.getElementById("night-ritual").classList.remove("hidden");
-    }
-}
-
-function unlockPortal(portalId) {
-    const el = document.getElementById(portalId);
-    if(el) {
-        el.classList.remove("locked");
-        const btn = el.querySelector("button");
-        if(btn) btn.disabled = false;
-    }
-}
-
-function playMiniGame(estacao) {
-    alert(`Iniciando Mini-Game da Estação ${estacao.toUpperCase()}! Movimente-se para acumular Prana.`);
-}
-
-function completeNightRitual() {
-    alert("Ritual Noturno concluído com sucesso! +50 Pranas adicionados.");
 }
