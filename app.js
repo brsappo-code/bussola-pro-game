@@ -1,8 +1,18 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxPdOi7fIToShXjLJS60o3g2pBBTy5PEbhMXtld1EBU08NDkhY76su1L-aLyqYRjPmqLg/exec"; 
 
 let tg = window.Telegram ? window.Telegram.WebApp : null;
-let currentTelegramId = "7202627825"; // ID Fallback / Padrão de Testes
+let currentTelegramId = "7202627825"; // ID Fallback
 let currentUserData = null;
+
+// Variáveis do Contador de Passos Ativo
+let sensorPassosAtivo = false;
+let ultimoAcelerometro = { x: 0, y: 0, z: 0 };
+let limitePasso = 12.0; // Sensibilidade de aceleração
+let tempoUltimoPasso = 0;
+
+// Variáveis da Câmara e MediaPipe Pose
+let cameraInstance = null;
+let poseInstance = null;
 
 if (tg) {
     tg.expand();
@@ -36,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     verificarCadastroExistente();
+    iniciarSensorMovimento();
 });
 
 function mostrarCriadorDePersonagem() {
@@ -45,7 +56,6 @@ function mostrarCriadorDePersonagem() {
     if(dashboard) dashboard.classList.add("hidden");
 }
 
-// Funções para controle do modal de biótipo
 function abrirModalBiotipo() {
     const modal = document.getElementById("modal-biotipo");
     if(modal) modal.classList.remove("hidden");
@@ -127,26 +137,139 @@ function renderGameDashboard(user) {
     document.getElementById("user-plan").innerText = (user.status_assinatura || "Free").toUpperCase();
     document.getElementById("prana-counter").innerText = user.prana || 0;
 
-    const steps = user.passos_hoje || 0;
+    atualizarInterfacePassos(user.passos_hoje || 0);
+}
+
+function atualizarInterfacePassos(steps) {
+    if(!currentUserData) currentUserData = {};
+    currentUserData.passos_hoje = steps;
+
     document.getElementById("steps-display").innerText = `${steps} / 6000`;
-    
     const progressPercent = Math.min((steps / 6000) * 100, 100);
     document.getElementById("steps-progress").style.width = `${progressPercent}%`;
 
+    // Desbloqueio dinâmico dos Portais
+    const portalInverno = document.getElementById("portal-inverno");
+    const statusInverno = document.getElementById("status-inverno");
     if (steps >= 1500) {
-        const portalInverno = document.getElementById("portal-inverno");
-        if(portalInverno) {
-            portalInverno.style.opacity = "1";
-            portalInverno.classList.remove("locked");
-        }
+        portalInverno.style.opacity = "1";
+        portalInverno.classList.remove("locked");
+        statusInverno.innerText = "🔓 ABERTO";
+        statusInverno.style.color = "#34d399";
     }
+
+    const portalOutono = document.getElementById("portal-outono");
+    const statusOutono = document.getElementById("status-outono");
     if (steps >= 3500) {
-        const portalOutono = document.getElementById("portal-outono");
-        if(portalOutono) {
-            portalOutono.style.opacity = "1";
-            portalOutono.classList.remove("locked");
-        }
+        portalOutono.style.opacity = "1";
+        portalOutono.classList.remove("locked");
+        statusOutono.innerText = "🔓 ABERTO";
+        statusOutono.style.color = "#34d399";
     }
+}
+
+// 👣 LÓGICA DO CONTADOR DE PASSOS
+function iniciarSensorMovimento() {
+    if (window.DeviceMotionEvent) {
+        window.addEventListener('devicemotion', (event) => {
+            const acc = event.accelerationIncludingGravity;
+            if (!acc) return;
+
+            const agora = Date.now();
+            const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+
+            if (magnitude > limitePasso && (agora - tempoUltimoPasso) > 400) {
+                tempoUltimoPasso = agora;
+                if (currentUserData) {
+                    const novosPassos = (currentUserData.passos_hoje || 0) + 1;
+                    atualizarInterfacePassos(novosPassos);
+                }
+            }
+        });
+    }
+}
+
+function simularPassos(qtd) {
+    if (!currentUserData) return;
+    const novosPassos = (currentUserData.passos_hoje || 0) + qtd;
+    atualizarInterfacePassos(novosPassos);
+}
+
+// 📷 VISÃO COMPUTACIONAL DOS PORTAIS (MEDIAPIPE)
+function entrarPortal(tipo) {
+    const steps = currentUserData ? (currentUserData.passos_hoje || 0) : 0;
+    
+    if (tipo === 'inverno' && steps < 1500) {
+        alert("🔒 O Portal do Inverno exige pelo menos 1.500 passos para ser desbloqueado!");
+        return;
+    }
+    if (tipo === 'outono' && steps < 3500) {
+        alert("🔒 O Portal do Outono exige pelo menos 3.500 passos para ser desbloqueado!");
+        return;
+    }
+
+    document.getElementById("modal-portal").classList.remove("hidden");
+    document.getElementById("portal-modal-title").innerText = tipo === 'inverno' ? "❄️ PORTAL DO INVERNO - ALONGAMENTO" : "🍂 PORTAL DO OUTONO - CORE";
+
+    iniciarCameraPostura();
+}
+
+function fecharPortal() {
+    document.getElementById("modal-portal").classList.add("hidden");
+    if (cameraInstance) {
+        cameraInstance.stop();
+    }
+}
+
+function iniciarCameraPostura() {
+    const videoElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('output-canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    const feedback = document.getElementById('feedback-postura');
+
+    poseInstance = new Pose({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+
+    poseInstance.setOptions({
+        modelComplexity: 1,
+        smoothLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
+    });
+
+    poseInstance.onResults((results) => {
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+        if (results.poseLandmarks) {
+            feedback.innerText = "✨ Alquimista Detetado! Mantenha a Postura Estável!";
+            feedback.style.color = "#34d399";
+            
+            // Desenhar pontos articulares simples no Canvas
+            for (const landmark of results.poseLandmarks) {
+                canvasCtx.beginPath();
+                canvasCtx.arc(landmark.x * canvasElement.width, landmark.y * canvasElement.height, 4, 0, 2 * Math.PI);
+                canvasCtx.fillStyle = '#38bdf8';
+                canvasCtx.fill();
+            }
+        } else {
+            feedback.innerText = "⚠️ Posicione-se visível na câmara...";
+            feedback.style.color = "#facc15";
+        }
+        canvasCtx.restore();
+    });
+
+    cameraInstance = new Camera(videoElement, {
+        onFrame: async () => {
+            await poseInstance.send({ image: videoElement });
+        },
+        width: 320,
+        height: 240
+    });
+
+    cameraInstance.start();
 }
 
 function exportarPergaminhoTXT() {
