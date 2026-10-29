@@ -144,7 +144,14 @@ function atualizarInterfacePassos(steps) {
     if(!currentUserData) currentUserData = {};
     currentUserData.passos_hoje = steps;
 
+    // Cálculo automático de Prana baseado nos passos (Ex: a cada 100 passos = 5 de Prana)
+    const pranaGerado = Math.floor(steps / 100) * 5;
+    currentUserData.prana = pranaGerado;
+
+    // Atualiza visualmente na HUD e no Painel
     document.getElementById("steps-display").innerText = `${steps} / 6000`;
+    document.getElementById("prana-counter").innerText = pranaGerado;
+    
     const progressPercent = Math.min((steps / 6000) * 100, 100);
     document.getElementById("steps-progress").style.width = `${progressPercent}%`;
 
