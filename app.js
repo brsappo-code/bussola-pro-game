@@ -2,8 +2,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxPdOi7fIToShXjLJS60o3g
 
 let tg = window.Telegram ? window.Telegram.WebApp : null;
 let currentTelegramId = "7202627825"; // ID Fallback / Padrão de Testes
-
-// Objeto global para armazenar temporariamente os dados do usuário carregado
 let currentUserData = null;
 
 if (tg) {
@@ -47,6 +45,17 @@ function mostrarCriadorDePersonagem() {
     if(dashboard) dashboard.classList.add("hidden");
 }
 
+// Funções para controle do modal de biótipo
+function abrirModalBiotipo() {
+    const modal = document.getElementById("modal-biotipo");
+    if(modal) modal.classList.remove("hidden");
+}
+
+function fecharModalBiotipo() {
+    const modal = document.getElementById("modal-biotipo");
+    if(modal) modal.classList.add("hidden");
+}
+
 function calcularBiometria() {
     const alturaInput = document.getElementById("input-altura");
     const pesoInput = document.getElementById("input-peso");
@@ -75,7 +84,7 @@ function verificarCadastroExistente() {
             }
         })
         .catch(err => {
-            console.log("Utilizador novo ou aguardando cadastro.");
+            console.log("Alquimista novo ou aguardando cadastro.");
         });
 }
 
@@ -103,18 +112,18 @@ function handleOnboarding(e) {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
-            alert("✨ Personagem Criado com Sucesso! Bem-vindo ao Bússola PRO!");
+            alert("✨ Alquimista Registrado com Sucesso! Bem-vindo ao Bússola PRO!");
             verificarCadastroExistente();
         }
     })
-    .catch(err => console.error("Erro ao registrar personagem:", err));
+    .catch(err => console.error("Erro ao registrar alquimista:", err));
 }
 
 function renderGameDashboard(user) {
     document.getElementById("character-creator").classList.add("hidden");
     document.getElementById("game-dashboard").classList.remove("hidden");
 
-    document.getElementById("user-name").innerText = user.nome || "Aventureiro";
+    document.getElementById("user-name").innerText = user.nome || "Alquimista";
     document.getElementById("user-plan").innerText = (user.status_assinatura || "Free").toUpperCase();
     document.getElementById("prana-counter").innerText = user.prana || 0;
 
@@ -140,10 +149,9 @@ function renderGameDashboard(user) {
     }
 }
 
-// FUNÇÃO PARA EXPORTAR PERGAMINHO DE ATRIBUTOS (TXT LEVE)
 function exportarPergaminhoTXT() {
     if (!currentUserData) {
-        alert("Nenhum dado de personagem encontrado para exportar.");
+        alert("Nenhum dado de alquimista encontrado para exportar.");
         return;
     }
 
@@ -155,7 +163,7 @@ function exportarPergaminhoTXT() {
 ====================================================
 ⚔️ PERGAMINHO DE ATRIBUTOS - BÚSSOLA PRO ⚔️
 ====================================================
-Aventureiro(a) : ${currentUserData.nome || "Desconhecido"}
+Alquimista      : ${currentUserData.nome || "Desconhecido"}
 ID Telegram    : ${currentUserData.telegram_id || currentTelegramId}
 Plano Atual    : ${(currentUserData.status_assinatura || "Free").toUpperCase()}
 Data de Registro: ${new Date().toLocaleDateString('pt-BR')}
@@ -180,7 +188,7 @@ Método Groppo - Transformando saúde em uma jornada épica.
     const blob = new Blob([conteudoPergaminho], { type: "text/plain;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Pergaminho_${(currentUserData.nome || "Aventureiro").replace(/\s+/g, '_')}.txt`;
+    link.download = `Pergaminho_${(currentUserData.nome || "Alquimista").replace(/\s+/g, '_')}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
