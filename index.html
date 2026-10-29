@@ -12,7 +12,7 @@
         <!-- HUD / HEADER DE JOGO -->
         <header class="hud-header">
             <div class="user-info">
-                <span id="user-name">Aventureiro</span>
+                <span id="user-name">Alquimista</span>
                 <span id="user-plan" class="badge-free">FREE</span>
             </div>
             <div class="prana-container">
@@ -25,19 +25,22 @@
         <section id="character-creator" class="rpg-window">
             <div class="window-title">⚔️ CRIADOR DE PERSONAGEM ⚔️</div>
             <form id="onboarding-form">
-                <label>Nome do Aventureiro:</label>
+                <label>NOME:</label>
                 <input type="text" id="input-nome" placeholder="Seu nome ou apelido" required>
 
                 <div class="row-inputs">
                     <div>
-                        <label>Gênero:</label>
+                        <label>GÊNERO:</label>
                         <select id="input-genero">
                             <option value="MASCULINO">Masculino</option>
                             <option value="FEMININO">Feminino</option>
                         </select>
                     </div>
                     <div>
-                        <label>Biotipo:</label>
+                        <label>
+                            BIOTIPO: 
+                            <span onclick="abrirModalBiotipo()" style="cursor:pointer; color:#38bdf8; font-size:14px;" title="Saiba mais sobre os biótipos">ℹ️</span>
+                        </label>
                         <select id="input-biotipo">
                             <option value="Mesomorfo">Mesomorfo</option>
                             <option value="Ectomorfo">Ectomorfo</option>
@@ -48,11 +51,11 @@
 
                 <div class="row-inputs">
                     <div>
-                        <label>Altura (cm):</label>
+                        <label>ALTURA (CM):</label>
                         <input type="number" id="input-altura" placeholder="175" required oninput="calcularBiometria()">
                     </div>
                     <div>
-                        <label>Peso (kg):</label>
+                        <label>PESO (KG):</label>
                         <input type="number" id="input-peso" placeholder="70" required oninput="calcularBiometria()">
                     </div>
                 </div>
@@ -61,12 +64,25 @@
                     📊 IMC: <span id="val-imc">--</span> | Biotipo: <span id="val-biotipo">Mesomorfo</span>
                 </div>
 
-                <label style="margin-top: 12px;">Silhueta Corporal (Escala 1 a 9): <strong id="silhueta-val">5</strong></label>
+                <label style="margin-top: 12px;">SILHUETA CORPORAL (ESCALA 1 A 9): <strong id="silhueta-val">5</strong></label>
                 <input type="range" id="input-silhueta" min="1" max="9" value="5">
 
-                <button type="submit" class="btn-arcade" style="margin-top: 14px;">Confirmar Atributos e Iniciar Jornada</button>
+                <button type="submit" class="btn-arcade" style="margin-top: 14px;">CONFIRMAR ATRIBUTOS E INICIAR JORNADA</button>
             </form>
         </section>
+
+        <!-- MODAL INFORMATIVO DE BIÓTIPOS -->
+        <div id="modal-biotipo" class="rpg-modal hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:999;">
+            <div class="rpg-window" style="background:#0f172a; border:2px solid #3b82f6; padding:20px; max-width:90%; border-radius:8px;">
+                <div class="window-title" style="margin-bottom:10px;">🧪 GUIA DE BIÓTIPOS</div>
+                <p style="font-size:12px; color:#cbd5e1; line-height:1.4; margin-bottom:10px;">
+                    <strong>• Ectomorfo:</strong> Estrutura óssea leve, maior dificuldade para ganhar peso e massa muscular.<br><br>
+                    <strong>• Mesomorfo:</strong> Estrutura atlética natural, facilidade para ganho de massa e controle de peso.<br><br>
+                    <strong>• Endomorfo:</strong> Metabolismo mais lento, facilidade para acumular gordura corporal, exigindo foco estratégico no movimento.
+                </p>
+                <button onclick="fecharModalBiotipo()" class="btn-arcade" style="background:#ef4444; width:100%; padding:8px;">FECHAR</button>
+            </div>
+        </div>
 
         <!-- PAINEL PRINCIPAL DE JOGO (DASHBOARD) -->
         <section id="game-dashboard" class="rpg-window hidden">
@@ -80,7 +96,6 @@
                 </div>
             </div>
 
-            <!-- PORTAIS DAS ESTAÇÕES -->
             <div class="portals-container">
                 <div id="portal-inverno" class="biometric-box locked" style="opacity: 0.5; margin-bottom: 8px;">
                     <h4>❄️ Portal do Inverno</h4>
@@ -88,4 +103,14 @@
                 </div>
                 <div id="portal-outono" class="biometric-box locked" style="opacity: 0.5; margin-bottom: 8px;">
                     <h4>🍂 Portal do Outono</h4>
-                    <p style="font-size: 10px;
+                    <p style="font-size: 10px; color: #94a3b8;">Core Leve & Postura (Requer 3.500 passos)</p>
+                </div>
+            </div>
+
+            <button onclick="exportarPergaminhoTXT()" class="btn-arcade" style="margin-top: 16px; background: #3b82f6;">📜 Baixar Pergaminho de Atributos (.TXT)</button>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
